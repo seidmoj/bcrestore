@@ -29,14 +29,12 @@ rm -rf $RPM_BUILD_ROOT
 mkdir -p %{buildroot}%{_unitdir} 
 mkdir -p %{buildroot}/usr/share/livetool
 mkdir -p %{buildroot}/usr/sbin
-
-mv livetool/livetool.sh ${RPM_BUILD_ROOT}/usr/sbin/
-cp -r livetool ${RPM_BUILD_ROOT}/usr/share/
+mv livetool/service/livetool.sh ${RPM_BUILD_ROOT}/usr/sbin/
+rsync -r --exclude=".git" livetool/ ${RPM_BUILD_ROOT}/usr/share/livetool/
 
 chmod +x ${RPM_BUILD_ROOT}/usr/sbin/livetool.sh
 
-install -p -m 644 %{SOURCE1} %{buildroot}%{_unitdir}/%{name}.service
-
+install -p -m 644 livetool/service/livetool-graphical.service %{buildroot}%{_unitdir}/%{name}.service
 
 %files
 %{_sbindir}/livetool.sh
