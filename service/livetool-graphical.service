@@ -1,16 +1,20 @@
 [Unit]
+#Before=display-manager.service getty@tty1.service
+#Conflicts=plymouth-quit.service
 Description=Live tool (graphical mode)
-After=livesys.service plymouth-quit.service
-Before=display-manager.service getty@tty1.service
-Conflicts=plymouth-quit.service
+After=systemd-user-sessions.service getty@tty1.service plymouth-quit.service livesys-late.service
 
 [Service]
-Type=oneshot
-ExecStartPre=-/bin/plymouth quit
 ExecStart=/usr/sbin/livetool.sh
-TimeoutSec=0
-RemainAfterExit=yes
-SysVStartPriority=99
+IgnoreSIGPIPE=no
+Restart=always
+RestartSec=5s
+#Type=forking
+#ExecStartPre=-/bin/plymouth quit
+#TimeoutSec=0
+#RemainAfterExit=no
+#SysVStartPriority=99
 
 [Install]
-WantedBy=graphical.target
+#WantedBy=graphical.target
+Alias=display-manager.service

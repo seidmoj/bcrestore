@@ -20,6 +20,7 @@ import os
 import sys
 
 import gobject
+#import Gtk
 from subprocess import call
 import bz2
 import dbus
@@ -53,7 +54,7 @@ class  GUI():
         except:
             print "Dbus Error"
 
-        self.filepath = '/run/initramfs/live/image/diskxp16g.bz2'
+        self.filepath = ""
         self.restorepath = ""
         self.backuppath = ""
         
@@ -77,11 +78,42 @@ class  GUI():
                                     
         self.logview.insert(self.logview.get_end_iter(), "Backup disk  :: "+ self.backuppath + "\n")
         self.logview.insert(self.logview.get_end_iter(), "Restore disk :: "+ self.restorepath+ "\n")
+
+    def openFile(self, title, type):
+        dialog = gtk.FileChooserDialog(title,
+                                       None,
+                                       type,
+                                       (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
+                                        gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+        dialog.set_default_response(gtk.RESPONSE_OK)
         
+        files = ""
+        filter = gtk.FileFilter()
+        filter.set_name("All files")
+        filter.add_pattern("*")
+        dialog.add_filter(filter)
+             
+        response = dialog.run()
+        if response == gtk.RESPONSE_OK:
+            files = dialog.get_filename()
+        elif response == gtk.RESPONSE_CANCEL:
+            print 'Closed, no files selected'
+        dialog.destroy()
+        return files
+
     def restore(self, obj = None):
         self.logview.insert(self.logview.get_end_iter(), "restore start ...\n")
-        hdd = open(self.restorepath,'wb')
-        co = bz2.BZ2File (self.filepath ,'r')
+        
+        restorePath = self.openFile("Select image to restore" ,gtk.FILE_CHOOSER_ACTION_OPEN)
+        if (restorePath!=""):
+            co = bz2.BZ2File (restorePath ,'r')
+        else:
+            return
+        try:
+            hdd = open(self.restorepath,'wb')
+        except:
+            print "Can not open hard drive !"
+            return
 
         state = os.statvfs(self.restorepath)
         diskspace = (state.f_bavail * state.f_frsize) / 1024
@@ -110,9 +142,18 @@ class  GUI():
     def backup(self, obj = None):
         self.logview.insert(self.logview.get_end_iter(), "Backup start .\n")
 
-        hdd = open(self.restorepath,'rb')
-        co = bz2.BZ2File (self.filepath,'w')
+        backupPath = self.openFile("Save image as ...", gtk.FILE_CHOOSER_ACTION_SAVE)
+        if (backupPath!=""):
+            co = bz2.BZ2File (backupPath,'w')
+        else:
+            return        
         
+        try:
+            hdd = open(self.restorepath,'rb')
+        except:
+            print "Can not open hard drive !"
+            return
+
         state = os.statvfs(self.restorepath)
         diskspace = (state.f_bavail * state.f_frsize) / 1024
         

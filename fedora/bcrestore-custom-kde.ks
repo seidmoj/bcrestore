@@ -15,7 +15,7 @@ selinux --disabled
 firewall --disable
 xconfig --startxonboot
 part / --size 3072 --fstype ext4
-services --enabled=NetworkManager,livetool --disabled=network,sshd
+services --enabled=livetool --disabled=NetworkManager,network,sshd
 
 # %include fedora-repo.ks
 repo --name=fedora --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-$releasever&arch=$basearch
@@ -236,6 +236,7 @@ systemctl --no-reload disable atd.service 2> /dev/null || :
 systemctl stop crond.service 2> /dev/null || :
 systemctl stop atd.service 2> /dev/null || :
 
+#systemctl enable livetool.service
 
 # Mark things as configured
 touch /.liveimg-configured
@@ -243,7 +244,24 @@ touch /.liveimg-configured
 # add static hostname to work around xauth bug
 # https://bugzilla.redhat.com/show_bug.cgi?id=679486
 
+#cat > /usr/lib/udev/rules.d/50-automount-usb << FFF
+#
+#KERNEL!="sd[a-z][0-9]", GOTO="media_by_label_auto_mount_end"  
+#IMPORT{program}="/sbin/blkid -o udev -p %N"  
+#ENV{ID_FS_LABEL}!="", ENV{dir_name}="%E{ID_FS_LABEL}"  
+#ENV{ID_FS_LABEL}=="", ENV{dir_name}="usbhd-%k"  
+#ACTION=="add", ENV{mount_options}="relatime"  
+#ACTION=="add", ENV{ID_FS_TYPE}=="vfat|ntfs", ENV{mount_options}="$env{mount_options},utf8,gid=100,umask=002"  
+#ACTION=="add", RUN+="/bin/mkdir -p /media/%E{dir_name}", RUN+="/bin/mount -o $env{mount_options} /dev/%k /media/%E{dir_name}"  
+#ACTION=="remove", ENV{dir_name}!="", RUN+="/bin/umount -l /media/%E{dir_name}", RUN+="/bin/rmdir /media/%E{dir_name}"  
+#LABEL="media_by_label_auto_mount_end"
+#
+#FFF
+#
+#systemctl restart systemd-udevd.service
+
 echo "localhost" > /etc/hostname
+#systemctl start livetool.service
 
 EOF
 

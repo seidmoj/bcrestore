@@ -2,4 +2,5 @@
 # livetool
 
 cd /usr/share/livetool/
-python /usr/share/livetool/livetools.py
+sh udev.sh
+python livetools.py

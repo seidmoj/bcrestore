@@ -11,63 +11,29 @@ lang en_US.UTF-8
 keyboard us
 timezone US/Eastern
 auth --useshadow --enablemd5
-selinux --disabled
-firewall --disable
+selinux --enforcing
+firewall --enabled --service=mdns
 xconfig --startxonboot
 part / --size 3072 --fstype ext4
-services --enabled=NetworkManager,livetool --disabled=network,sshd
+services --enabled=NetworkManager --disabled=network,sshd
 
-# %include fedora-repo.ks
-repo --name=fedora --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-$releasever&arch=$basearch
-#repo --name=updates --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-f$releasever&arch=$basearch
-repo --name=rpmfusion-nonfree --mirrorlist=http://mirrors.rpmfusion.org/mirrorlist?repo=nonfree-fedora-$releasever&arch=$basearch
-repo --name=rpmfusion-nonfree-updates --mirrorlist=http://mirrors.rpmfusion.org/mirrorlist?repo=nonfree-fedora-updates-released-$releasever&arch=$basearch
-repo --name=rpmfusion-free --mirrorlist=http://mirrors.rpmfusion.org/mirrorlist?repo=free-fedora-$releasever&arch=$basearch
-repo --name=rpmfusion-free-updates --mirrorlist=http://mirrors.rpmfusion.org/mirrorlist?repo=free-fedora-updates-released-$releasever&arch=$basearch
-#repo --name=fedora --baseurl=file:///data/f20-repo/fedora
-repo --name=custom --baseurl=file:///data/f20-repo/custom
+%include fedora-repo.ks
 
 %packages
-# echo "Instaling BASE-X"
 @base-x
-# echo "Instaling GUEST-DESKTOP-AGENTS"
 @guest-desktop-agents
-# echo "Instaling STANDARD"
 @standard
-# echo "Instaling CORE"
-# @core
-# @fonts
-# @input-methods
-# @dial-up
-# @multimedia
-# @hardware-support
-# @printing
--man-pages*
+@core
+@fonts
+@input-methods
+@dial-up
+@multimedia
+@hardware-support
+@printing
 
-dejavu-sans-fonts
-dejavu-sans-mono-fonts
-dejavu-serif-fonts
-
-# echo "Instaling WINDOW MANAGER"
-adwaita-cursor-theme
-adwaita-gtk2-theme
-metacity
-openssh-server
-udisks2
-# echo "Instaling LIVETOOL"
-livetool
-#autofs
-#radarCore
-#radarClient
-# echo "Instaling PYGTK"
-pygtk2
-pygtk2-libglade
-python-meh
-system-config-keyboard
 # Explicitly specified here:
 # <notting> walters: because otherwise dependency loops cause yum issues.
 kernel
--PackageKit*
 
 # This was added a while ago, I think it falls into the category of
 # "Diagnosis/recovery tool useful from a Live OS image".  Leaving this untouched
@@ -236,13 +202,11 @@ systemctl --no-reload disable atd.service 2> /dev/null || :
 systemctl stop crond.service 2> /dev/null || :
 systemctl stop atd.service 2> /dev/null || :
 
-
 # Mark things as configured
 touch /.liveimg-configured
 
 # add static hostname to work around xauth bug
 # https://bugzilla.redhat.com/show_bug.cgi?id=679486
-
 echo "localhost" > /etc/hostname
 
 EOF
@@ -301,8 +265,6 @@ EndSection
 FOE
 fi
 
-
-
 EOF
 
 chmod 755 /etc/rc.d/init.d/livesys
@@ -319,7 +281,7 @@ systemctl enable tmp.mount
 # work around for poor key import UI in PackageKit
 rm -f /var/lib/rpm/__db*
 releasever=$(rpm -q --qf '%{version}\n' fedora-release)
-basearch=$(uname -i)
+basearch=$(uname -m)
 rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
 echo "Packages within this LiveCD"
 rpm -qa
@@ -327,7 +289,7 @@ rpm -qa
 rm -f /var/lib/rpm/__db*
 
 # go ahead and pre-make the man -k cache (#455968)
-# /usr/bin/mandb
+/usr/bin/mandb
 
 # save a little bit of space at least...
 rm -f /boot/initramfs*
@@ -341,7 +303,7 @@ rm -f /core*
 
 
 %post --nochroot
-cp $INSTALL_ROOT/usr/share/doc/*-release/GPL $LIVE_ROOT/GPL
+cp $INSTALL_ROOT/usr/share/doc/*-release-*/GPL $LIVE_ROOT/GPL
 
 # only works on x86, x86_64
 if [ "$(uname -i)" = "i386" -o "$(uname -i)" = "x86_64" ]; then

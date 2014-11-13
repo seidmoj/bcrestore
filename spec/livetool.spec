@@ -1,10 +1,10 @@
 Name:           livetool
 Version:        1.0
-Release:        1%{?dist}
+Release:        7%{?dist}
 Summary:        Live tools for backup and restore
 
 License:        GPLv2+
-URL:            http://mojpardaz.com/
+URL:            http://www.www.com/
 Source0:        livetool.tar.gz
 Source1:	livetool-graphical.service
 
@@ -43,6 +43,12 @@ install -p -m 644 livetool/service/livetool-graphical.service %{buildroot}%{_uni
 
 
 %changelog
+* Thu Nov 6 2014 Seid Mojtaba Hoseini Zadeh <seid.moj@gmail.com> ==> 1.0-6
+- bugfix service to forking
+
+* Thu Nov 6 2014 Seid Mojtaba Hoseini Zadeh <seid.moj@gmail.com>
+- bugfix service to auto restart
+- added usb auto mount 
 
 * Fri Aug 23 2013 Mola Pahnadayan <mola.mp@gmail.com>
 - Initial RPM release.
